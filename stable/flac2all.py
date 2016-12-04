@@ -38,6 +38,7 @@ import string,re
 import pdb
 import threading,time,multiprocessing
 import subprocess as sp
+import taglib
 
 #CODE
 
@@ -621,7 +622,13 @@ def encode_thread(current_file,filecounter,opts):
         if (opts['include_root'] == True):
             outdirFinal = opts['outdir'] + os.path.split(opts['dirpath'])[1] + os.path.split(current_file_local)[0]
         else:
-            outdirFinal = opts['outdir'] + os.path.split(current_file_local)[0]
+            if (opts['car'] == True):
+                folderContainingMusicFile = os.path.split(current_file_local)[0]
+                subfoldersContainingMusicFile = folderContainingMusicFile.split("/")
+                outdirFinal = opts['outdir'] + "/" + folderContainingMusicFile.split("/")[1]
+            else:
+                outdirFinal = opts['outdir'] + os.path.split(current_file_local)[0]
+
 
     #if the path does not exist, then make it
     if (os.path.exists(outdirFinal) == False):
@@ -635,7 +642,13 @@ def encode_thread(current_file,filecounter,opts):
 
 
     #this chunk of code provides us with the full path sans extension
-    outfile = os.path.join(outdirFinal,os.path.split(current_file_local)[1])
+    if (opts['car'] == True):
+        song = taglib.File(current_file)
+        tracknumber = string.join(['00', str(song.tags['TRACKNUMBER'][0])], '')[-2:]
+        renamefile = "(" + str(song.tags['DATE'][0]) + ") " + str(song.tags['ALBUM'][0]) + " - " + string.join(['00', str(song.tags['TRACKNUMBER'][0])], '')[-2:] + " - " + str(song.tags['TITLE'][0])
+        outfile = os.path.join(outdirFinal, renamefile)
+    else:
+        outfile = os.path.join(outdirFinal, os.path.split(current_file_local)[1])
     #return the name on its own, without the extension
     outfile = string.split(outfile, ".flac")[0]
     #This part deals with copying non-music data over (so everything that isn't
@@ -766,6 +779,7 @@ opts = {
 "flacopts":"-q 8", #your flac encoder settings
 "aacplusopts":"-q 0.3 ",
 "include_root":False,
+"car":False,
 }
 
 #This area deals with checking the command line options,
@@ -802,6 +816,7 @@ parser.add_option("-n","--nodirs",dest="nodirs",action="store_true",
       default=False,help="Don't create Directories, put everything together")
 parser.add_option("-x","--exclude",dest="exclude",default=None, help="exclude certain files from processing by PATTERN (regular expressions supported)")
 parser.add_option("-r","--include-root",dest="root_include", action="store_true", default=False, help="Include the top-level directory in output path ( default=False )")
+parser.add_option("--car", dest="car", action="store_true", default=False, help="Keep just top level folder (artist) for car")
 
 ##The below isn't used anymore, so removed as an option (to re-add in future?)
 #parser.add_option("-B","--buffer",dest="buffer",metavar="size", 
