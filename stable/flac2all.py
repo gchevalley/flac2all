@@ -643,9 +643,22 @@ def encode_thread(current_file,filecounter,opts):
 
     #this chunk of code provides us with the full path sans extension
     if (opts['car'] == True):
+
         song = taglib.File(current_file)
-        tracknumber = string.join(['00', str(song.tags['TRACKNUMBER'][0])], '')[-2:]
-        renamefile = "(" + str(song.tags['DATE'][0]) + ") " + str(song.tags['ALBUM'][0]) + " - " + string.join(['00', str(song.tags['TRACKNUMBER'][0])], '')[-2:] + " - " + str(song.tags['TITLE'][0])
+
+        songDateYear = str(song.tags['DATE'][0])
+        songAlbum = song.tags['ALBUM'][0].encode("utf-8")
+        songTrackNumber = string.join(['00', str(song.tags['TRACKNUMBER'][0])], '')[-2:]
+        songTitle = song.tags['TITLE'][0].encode("utf-8")
+        #renamefile = "(" + str(song.tags['DATE'][0]) + ") " + str(song.tags['ALBUM'][0]) + " - " + string.join(['00', str(song.tags['TRACKNUMBER'][0])], '')[-2:] + " - " + str(song.tags['TITLE'][0])
+        #renamefile = "(" + str(song.tags['DATE'][0]) + ") " + str(song.tags['ALBUM'][0]) + " - " + os.path.split(current_file_local)[1]
+
+        for c in r'[]/\;,><&*:%=+@!#^()|?^':
+            songAlbum = songAlbum.replace(c, '')
+            songTitle = songTitle.replace(c, '')
+
+        renamefile = "(" + songDateYear + ") " + songAlbum + " - " + songTrackNumber + ". " + songTitle
+
         outfile = os.path.join(outdirFinal, renamefile)
     else:
         outfile = os.path.join(outdirFinal, os.path.split(current_file_local)[1])
